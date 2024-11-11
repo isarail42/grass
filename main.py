@@ -90,7 +90,6 @@ async def connect_to_wss(socks5_proxy, user_id, is_premium=False):
         except Exception as e:
             logger.error(f"Error with proxy {socks5_proxy}: {e}")
 
-
 def clear_terminal():
     os.system('cls' if os.name == 'nt' else 'clear')
         
@@ -106,7 +105,7 @@ def key_bot():
         except json.JSONDecodeError:
             print(response.text)
     except requests.RequestException as e:
-        print_(f"Failed to load header")
+        print("Failed to load header")
         
 async def rotate_proxies():
     while True:
@@ -153,14 +152,14 @@ async def main():
             await rotate_proxies()
         except Exception as e:
             logger.error(f"Error in proxy rotation: {e}")
-            await asyncio.sleep(60)  
+            await asyncio.sleep(60)
 
 def get_proxy_list():
     print("\nSelect proxy type:")
     print("1. Free Proxy")
-    print("2. Premium Proxy") 
+    print("2. Premium Proxy (socks5)")
     print("3. Local Proxy")
-    
+
     config = {}
     try:
         with open('config.txt', 'r') as f:
@@ -171,7 +170,7 @@ def get_proxy_list():
         config['proxy_type'] = choice
         with open('config.txt', 'w') as f:
             json.dump(config, f)
-    
+
     if choice == "1":
         try:
             response = requests.get(base64.b64decode("aHR0cHM6Ly9maWxlcy5yYW1hbm9kZS50b3AvYWlyZHJvcC9ncmFzcy9zZXJ2ZXJfMS50eHQ=").decode('utf-8'))
@@ -179,40 +178,30 @@ def get_proxy_list():
         except:
             logger.error("Error: Failed to get free proxy")
             sys.exit(1)
-            
+
     elif choice == "2":
-        try:
-            if 'premium_password' in config:
-                password = config['premium_password']
-            else:
-                password = input("\nEnter premium password: ")
-                config['premium_password'] = password
-                with open('config.txt', 'w') as f:
-                    json.dump(config, f)
-            
-            if password != base64.b64decode("ZGljZWVrZXk=").decode('utf-8'):
-                logger.error("Wrong password!")
-                if 'premium_password' in config:
-                    del config['premium_password']
-                    with open('config.txt', 'w') as f:
-                        json.dump(config, f)
-                sys.exit(1)
-                
-            proxy_response = requests.get(base64.b64decode("aHR0cHM6Ly9pdGJhYXJ0cy5jb20vcHJveHkvZGljZWVrZXkudHh0").decode('utf-8'))
-            return proxy_response.text.strip().split("\n"), True
-            
-        except Exception as e:
-            logger.error(f"Error: Failed to get premium proxy: {e}")
-            sys.exit(1)
-            
+        premium_proxies = [
+            "socks5://vhjpeikv:zpaxc9o8cwfo@198.23.239.134:6540",
+            "socks5://vhjpeikv:zpaxc9o8cwfo@207.244.217.165:6712",
+            "socks5://vhjpeikv:zpaxc9o8cwfo@107.172.163.27:6543",
+            "socks5://vhjpeikv:zpaxc9o8cwfo@64.137.42.112:5157",
+            "socks5://vhjpeikv:zpaxc9o8cwfo@173.211.0.148:6641",
+            "socks5://vhjpeikv:zpaxc9o8cwfo@161.123.152.115:6360",
+            "socks5://vhjpeikv:zpaxc9o8cwfo@167.160.180.203:6754",
+            "socks5://vhjpeikv:zpaxc9o8cwfo@154.36.110.199:6853",
+            "socks5://vhjpeikv:zpaxc9o8cwfo@173.0.9.70:5653",
+            "socks5://vhjpeikv:zpaxc9o8cwfo@173.0.9.209:5792"
+        ]
+        return premium_proxies, True
+
     elif choice == "3":
         if not os.path.exists("proxy.txt"):
             logger.error("Error: proxy.txt file not found")
             sys.exit(1)
-            
+        
         with open("proxy.txt") as f:
             return f.read().strip().split("\n"), False
-            
+
     else:
         logger.error("Invalid choice!")
         sys.exit(1)
