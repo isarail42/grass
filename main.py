@@ -8,17 +8,31 @@ import time
 import uuid
 import requests
 import sys
+import socket
 from datetime import datetime, timedelta
-
 from loguru import logger
 from websockets_proxy import Proxy, proxy_connect
 from fake_useragent import UserAgent
 
+# User agent setup
 user_agent = UserAgent(os='windows', browsers='chrome')
 random_user_agent = user_agent.random
 
-PROXY_COUNT = 20  
-ROTATION_INTERVAL = 86400  
+PROXY_COUNT = 20
+ROTATION_INTERVAL = 86400  # 24 hours
+
+# Function to check if a proxy is working
+def is_proxy_working(proxy):
+    try:
+        test_url = "http://www.google.com"
+        proxies = {
+            "http": proxy,
+            "https": proxy
+        }
+        response = requests.get(test_url, proxies=proxies, timeout=5)
+        return response.status_code == 200
+    except (requests.RequestException, socket.timeout):
+        return False
 
 def log_rotation_time():
     current_time = datetime.now()
@@ -36,7 +50,7 @@ async def connect_to_wss(socks5_proxy, user_id, is_premium=False):
 
     while True:
         try:
-            await asyncio.sleep(random.randint(1, 10) / 10)
+            await asyncio.sleep(random.uniform(0.1, 1))
             custom_headers = {
                 "User-Agent": random_user_agent,
                 "Origin": "chrome-extension://lkbnfiajjmbhnfledhphioinpickokdi"
@@ -44,10 +58,11 @@ async def connect_to_wss(socks5_proxy, user_id, is_premium=False):
             ssl_context = ssl.create_default_context()
             ssl_context.check_hostname = False
             ssl_context.verify_mode = ssl.CERT_NONE
-            urilist = ["wss://proxy.wynd.network:4444/","wss://proxy.wynd.network:4650/"]
+            urilist = ["wss://proxy.wynd.network:4444/", "wss://proxy.wynd.network:4650/"]
             uri = random.choice(urilist)
             server_hostname = "proxy.wynd.network"
             proxy = Proxy.from_url(socks5_proxy)
+
             async with proxy_connect(uri, proxy=proxy, ssl=ssl_context, server_hostname=server_hostname,
                                      extra_headers=custom_headers) as websocket:
                 async def send_ping():
@@ -89,10 +104,11 @@ async def connect_to_wss(socks5_proxy, user_id, is_premium=False):
                         await websocket.send(json.dumps(pong_response))
         except Exception as e:
             logger.error(f"Error with proxy {socks5_proxy}: {e}")
+            break  # End loop on proxy failure
 
 def clear_terminal():
     os.system('cls' if os.name == 'nt' else 'clear')
-        
+
 def key_bot():
     url = base64.b64decode("aHR0cDovL2l0YmFhcnRzLmNvbS9hcGkuanNvbg==").decode('utf-8')
     try:
@@ -104,9 +120,9 @@ def key_bot():
             print(header)
         except json.JSONDecodeError:
             print(response.text)
-    except requests.RequestException as e:
+    except requests.RequestException:
         print("Failed to load header")
-        
+
 async def rotate_proxies():
     while True:
         proxies, is_premium = get_proxy_list()
@@ -142,17 +158,6 @@ async def rotate_proxies():
             logger.error("user.txt file not found")
             await asyncio.sleep(ROTATION_INTERVAL)
             continue
-            
-async def main():
-    clear_terminal()
-    key_bot()
-    
-    while True:
-        try:
-            await rotate_proxies()
-        except Exception as e:
-            logger.error(f"Error in proxy rotation: {e}")
-            await asyncio.sleep(60)
 
 def get_proxy_list():
     print("\nSelect proxy type:")
@@ -174,23 +179,21 @@ def get_proxy_list():
     if choice == "1":
         try:
             response = requests.get(base64.b64decode("aHR0cHM6Ly9maWxlcy5yYW1hbm9kZS50b3AvYWlyZHJvcC9ncmFzcy9zZXJ2ZXJfMS50eHQ=").decode('utf-8'))
-            return response.text.strip().split("\n"), False
-        except:
-            logger.error("Error: Failed to get free proxy")
+            raw_proxies = response.text.strip().split("\n")
+            working_proxies = [proxy for proxy in raw_proxies if is_proxy_working(proxy)]
+
+            if not working_proxies:
+                logger.error("No working free proxies found.")
+                sys.exit(1)
+
+            return working_proxies, False
+        except Exception as e:
+            logger.error(f"Error: Failed to get or validate free proxies. {e}")
             sys.exit(1)
 
     elif choice == "2":
         premium_proxies = [
-            "socks5://vhjpeikv:zpaxc9o8cwfo@198.23.239.134:6540",
-            "socks5://vhjpeikv:zpaxc9o8cwfo@207.244.217.165:6712",
-            "socks5://vhjpeikv:zpaxc9o8cwfo@107.172.163.27:6543",
-            "socks5://vhjpeikv:zpaxc9o8cwfo@64.137.42.112:5157",
-            "socks5://vhjpeikv:zpaxc9o8cwfo@173.211.0.148:6641",
-            "socks5://vhjpeikv:zpaxc9o8cwfo@161.123.152.115:6360",
-            "socks5://vhjpeikv:zpaxc9o8cwfo@167.160.180.203:6754",
-            "socks5://vhjpeikv:zpaxc9o8cwfo@154.36.110.199:6853",
-            "socks5://vhjpeikv:zpaxc9o8cwfo@173.0.9.70:5653",
-            "socks5://vhjpeikv:zpaxc9o8cwfo@173.0.9.209:5792"
+            # Add premium proxy list here
         ]
         return premium_proxies, True
 
@@ -200,7 +203,14 @@ def get_proxy_list():
             sys.exit(1)
         
         with open("proxy.txt") as f:
-            return f.read().strip().split("\n"), False
+            raw_proxies = f.read().strip().split("\n")
+            working_proxies = [proxy for proxy in raw_proxies if is_proxy_working(proxy)]
+            
+            if not working_proxies:
+                logger.error("No working local proxies found.")
+                sys.exit(1)
+
+            return working_proxies, False
 
     else:
         logger.error("Invalid choice!")
