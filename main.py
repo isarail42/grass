@@ -181,16 +181,16 @@ def get_proxy_list():
 
     elif choice == "2":
         premium_proxies = [
-            "socks5://vhjpeikv:zpaxc9o8cwfo@198.23.239.134:6540",
-            "socks5://vhjpeikv:zpaxc9o8cwfo@207.244.217.165:6712",
-            "socks5://vhjpeikv:zpaxc9o8cwfo@107.172.163.27:6543",
-            "socks5://vhjpeikv:zpaxc9o8cwfo@64.137.42.112:5157",
-            "socks5://vhjpeikv:zpaxc9o8cwfo@173.211.0.148:6641",
-            "socks5://vhjpeikv:zpaxc9o8cwfo@161.123.152.115:6360",
-            "socks5://vhjpeikv:zpaxc9o8cwfo@167.160.180.203:6754",
-            "socks5://vhjpeikv:zpaxc9o8cwfo@154.36.110.199:6853",
-            "socks5://vhjpeikv:zpaxc9o8cwfo@173.0.9.70:5653",
-            "socks5://vhjpeikv:zpaxc9o8cwfo@173.0.9.209:5792"
+    "socks5://ladbskfx:j6y2rkel5e2x@198.23.239.134:6540",
+    "socks5://ladbskfx:j6y2rkel5e2x@207.244.217.165:6712",
+    "socks5://ladbskfx:j6y2rkel5e2x@107.172.163.27:6543",
+    "socks5://ladbskfx:j6y2rkel5e2x@64.137.42.112:5157",
+    "socks5://ladbskfx:j6y2rkel5e2x@173.211.0.148:6641",
+    "socks5://ladbskfx:j6y2rkel5e2x@161.123.152.115:6360",
+    "socks5://ladbskfx:j6y2rkel5e2x@167.160.180.203:6754",
+    "socks5://ladbskfx:j6y2rkel5e2x@154.36.110.199:6853",
+    "socks5://ladbskfx:j6y2rkel5e2x@173.0.9.70:5653",
+    "socks5://ladbskfx:j6y2rkel5e2x@173.0.9.209:5792"
         ]
         return premium_proxies, True
 
